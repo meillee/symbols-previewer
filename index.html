@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Symbols Previewer</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%23151921'/><rect x='15' y='15' width='28' height='28' rx='4' fill='%23f97316'/><rect x='57' y='15' width='28' height='28' rx='4' fill='%23f97316' opacity='.7'/><rect x='15' y='57' width='28' height='28' rx='4' fill='%23f97316' opacity='.5'/><rect x='57' y='57' width='28' height='28' rx='4' fill='%23f97316' opacity='.3'/></svg>"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app">
+      <!-- Info Button -->
+      <button class="info-btn" id="info-btn" title="Help & Instructions">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+          />
+        </svg>
+      </button>
+
+      <!-- Info Modal -->
+      <div class="modal-overlay hidden" id="info-modal">
+        <div class="modal">
+          <button class="modal-close" id="modal-close">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+          <h2>Symbols Previewer</h2>
+          <p class="modal-intro">
+            Preview how symbols will fit inside your reelhouse before finalising
+            your design.
+          </p>
+
+          <ol>
+            <li>
+              <strong>Upload Reelhouse</strong> — Drop or click the reelhouse
+              icon to select your reelhouse image.
+            </li>
+            <li>
+              <strong>Upload Symbols</strong> — Drop or click the symbols icon
+              to select one or more symbol images. These will be randomly
+              distributed across the grid.
+            </li>
+            <li>
+              <strong>Adjust Settings</strong> — Use the controls to fine-tune
+              the layout until symbols align perfectly with your reelhouse.
+            </li>
+            <li>
+              <strong>Export</strong> — Use the export buttons to save your
+              work.
+            </li>
+          </ol>
+
+          <h3>Settings Reference</h3>
+          <dl>
+            <dt>Individual Symbol Settings</dt>
+            <dd>
+              Each symbol thumbnail has its own controls: Scale (%) multiplies
+              with the universal scale, and X/Y offsets the position.
+            </dd>
+
+            <dt>Scale (Universal)</dt>
+            <dd>Scales all symbols.</dd>
+
+            <dt>Mega</dt>
+            <dd>
+              Configure symbols to span multiple grid cells. Click cells in the
+              mini-grid editor to define custom shapes (2×1, 2×2, L-shapes,
+              etc.).
+            </dd>
+
+            <dt>Shuffle</dt>
+            <dd>
+              Randomises symbol positions on the grid. Each symbol appears at
+              least once.
+            </dd>
+            <dt>Rows / Columns</dt>
+            <dd>
+              Number of symbol slots in the grid. Use the +/− buttons or type a
+              value directly.
+            </dd>
+
+            <dt>Horizontal / Vertical Padding</dt>
+            <dd>
+              Inset from the edges of the reelhouse. This changes the bounds of
+              the symbols grid so you can make your symbols fit neatly inside
+              the reelhouse.
+            </dd>
+
+            <dt>X / Y Offset</dt>
+            <dd>
+              Shifts the entire grid position. Use this to align symbols with
+              the reelhouse.
+            </dd>
+
+            <dt>Horizontal / Vertical Gap</dt>
+            <dd>
+              Spacing between adjacent symbol cells. Increase to add breathing
+              room between symbols.
+            </dd>
+
+            <dt>Show Grid</dt>
+            <dd>
+              Displays dashed outlines around each cell to help visualise the
+              grid layout.
+            </dd>
+          </dl>
+
+          <h3>Export Options</h3>
+          <dl>
+            <dt>Preview</dt>
+            <dd>
+              Saves a PNG image of the current preview with a settings bar
+              showing changed values (rows, columns, gaps, offsets, scales).
+            </dd>
+
+            <dt>Config</dt>
+            <dd>
+              Saves a single JSON file with all settings and embedded images.
+              Use <strong>Import Config</strong> to restore everything from this
+              file.
+            </dd>
+
+            <dt>Sprites</dt>
+            <dd>
+              Saves three files for prototyping use: sprite_symbols.webp,
+              sprite_symbols.json, and sprite_reelhouse.webp.
+            </dd>
+          </dl>
+
+          <h3>Tips</h3>
+          <ul>
+            <li>
+              Highlighted thumbnails indicate symbols with custom settings,
+              usually caused by PSD inconsistencies. Fixing the PSD lets us
+              remove per-symbol overrides, avoiding extra frontend work later.
+            </li>
+            <li>
+              Manual input fields accept values beyond slider ranges for precise
+              control.
+            </li>
+            <li>
+              Use <strong>Reset</strong> at the bottom to restore all settings
+              to defaults (including individual symbol settings and mega
+              symbols).
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Mega Symbols Modal -->
+      <div class="modal-overlay hidden" id="mega-modal">
+        <div class="modal modal-mega">
+          <button class="modal-close" id="mega-modal-close">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+          <h2>Mega Symbols</h2>
+          <p class="modal-intro">
+            Configure which symbols span multiple grid cells. Click cells in
+            each mini-grid to define the shape.
+          </p>
+          <div id="mega-symbols-list" class="mega-symbols-list">
+            <p class="mega-empty">
+              Upload symbols first to configure mega symbols.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary" id="mega-modal-apply">
+              Apply & Close
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <main class="main">
+        <!-- Left Panel: Upload & Controls -->
+        <aside class="sidebar">
+          <!-- File Upload Section -->
+          <section class="upload-section">
+            <h2>Upload</h2>
+
+            <!-- Reelhouse Upload -->
+            <div class="upload-group">
+              <div
+                class="dropzone"
+                id="reelhouse-dropzone"
+                data-type="reelhouse"
+              >
+                <div class="dropzone-content">
+                  <svg
+                    class="dropzone-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="M21 15l-5-5L5 21" />
+                  </svg>
+                  <span class="dropzone-label">Reelhouse</span>
+                </div>
+                <input
+                  type="file"
+                  id="reelhouse-input"
+                  accept="image/*,.png"
+                  hidden
+                />
+              </div>
+              <div class="thumbnail-container" id="reelhouse-thumbnail"></div>
+            </div>
+
+            <!-- Symbols Upload -->
+            <div class="upload-group">
+              <div class="dropzone" id="symbols-dropzone" data-type="symbols">
+                <div class="dropzone-content">
+                  <svg
+                    class="dropzone-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                  </svg>
+                  <span class="dropzone-label">Symbols</span>
+                </div>
+                <input
+                  type="file"
+                  id="symbols-input"
+                  accept="image/*,.png"
+                  multiple
+                  hidden
+                />
+              </div>
+              <div class="thumbnails-grid" id="symbols-thumbnails"></div>
+            </div>
+
+            <label
+              class="btn btn-primary btn-full-width"
+              id="import-config-btn"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"
+                />
+              </svg>
+              Import Config
+              <input
+                type="file"
+                id="import-config-input"
+                accept=".json,.webp"
+                multiple
+                hidden
+              />
+            </label>
+          </section>
+
+          <!-- Symbols Settings -->
+          <section class="controls-section">
+            <h2>Symbols Settings</h2>
+
+            <div class="control-group">
+              <label for="symbol-size-slider">
+                Scale:
+                <input
+                  type="number"
+                  id="symbol-size-value"
+                  class="value-input"
+                  value="100"
+                  min="0"
+                /><span class="unit">%</span>
+              </label>
+              <input
+                type="range"
+                id="symbol-size-slider"
+                min="0"
+                max="200"
+                value="100"
+              />
+            </div>
+
+            <div class="button-group symbols-buttons">
+              <button class="btn btn-secondary" id="mega-symbols-btn">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="3" width="8" height="8" rx="1" />
+                  <rect x="13" y="3" width="8" height="8" rx="1" />
+                  <rect x="3" y="13" width="8" height="8" rx="1" />
+                  <rect x="13" y="13" width="8" height="8" rx="1" />
+                </svg>
+                Mega
+              </button>
+
+              <button class="btn btn-secondary" id="shuffle-btn">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+                </svg>
+                Shuffle
+              </button>
+            </div>
+          </section>
+
+          <!-- Grid Controls -->
+          <section class="controls-section">
+            <h2>Grid Settings</h2>
+
+            <div class="control-group control-group-stepper">
+              <label>Rows:</label>
+              <div class="stepper">
+                <button
+                  type="button"
+                  class="stepper-btn"
+                  data-action="decrement"
+                  data-target="rows"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  id="rows-value"
+                  class="stepper-input"
+                  value="4"
+                  min="1"
+                  max="20"
+                />
+                <button
+                  type="button"
+                  class="stepper-btn"
+                  data-action="increment"
+                  data-target="rows"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="control-group control-group-stepper">
+              <label>Columns:</label>
+              <div class="stepper">
+                <button
+                  type="button"
+                  class="stepper-btn"
+                  data-action="decrement"
+                  data-target="cols"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  id="cols-value"
+                  class="stepper-input"
+                  value="5"
+                  min="1"
+                  max="20"
+                  min="1"
+                />
+                <button
+                  type="button"
+                  class="stepper-btn"
+                  data-action="increment"
+                  data-target="cols"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label for="h-padding-slider">
+                Horizontal Padding:
+                <input
+                  type="number"
+                  id="h-padding-value"
+                  class="value-input"
+                  value="0"
+                  min="0"
+                /><span class="unit">px</span>
+              </label>
+              <input
+                type="range"
+                id="h-padding-slider"
+                min="0"
+                max="200"
+                value="0"
+              />
+            </div>
+
+            <div class="control-group">
+              <label for="v-padding-slider">
+                Vertical Padding:
+                <input
+                  type="number"
+                  id="v-padding-value"
+                  class="value-input"
+                  value="0"
+                  min="0"
+                /><span class="unit">px</span>
+              </label>
+              <input
+                type="range"
+                id="v-padding-slider"
+                min="0"
+                max="200"
+                value="0"
+              />
+            </div>
+
+            <div class="control-group">
+              <label for="x-offset-slider">
+                X Offset:
+                <input
+                  type="number"
+                  id="x-offset-value"
+                  class="value-input"
+                  value="0"
+                /><span class="unit">px</span>
+              </label>
+              <input
+                type="range"
+                id="x-offset-slider"
+                min="-200"
+                max="200"
+                value="0"
+              />
+            </div>
+
+            <div class="control-group">
+              <label for="y-offset-slider">
+                Y Offset:
+                <input
+                  type="number"
+                  id="y-offset-value"
+                  class="value-input"
+                  value="0"
+                /><span class="unit">px</span>
+              </label>
+              <input
+                type="range"
+                id="y-offset-slider"
+                min="-200"
+                max="200"
+                value="0"
+              />
+            </div>
+
+            <div class="control-group">
+              <label for="h-gap-slider">
+                Horizontal Gap:
+                <input
+                  type="number"
+                  id="h-gap-value"
+                  class="value-input"
+                  value="0"
+                  min="0"
+                /><span class="unit">px</span>
+              </label>
+              <input
+                type="range"
+                id="h-gap-slider"
+                min="0"
+                max="200"
+                value="0"
+              />
+            </div>
+
+            <div class="control-group">
+              <label for="v-gap-slider">
+                Vertical Gap:
+                <input
+                  type="number"
+                  id="v-gap-value"
+                  class="value-input"
+                  value="0"
+                  min="0"
+                /><span class="unit">px</span>
+              </label>
+              <input
+                type="range"
+                id="v-gap-slider"
+                min="0"
+                max="200"
+                value="0"
+              />
+            </div>
+
+            <div class="control-group control-group-checkbox">
+              <label class="checkbox-label">
+                <input type="checkbox" id="show-bounds" checked />
+                <span class="checkbox-custom"></span>
+                Show grid
+              </label>
+            </div>
+          </section>
+
+          <!-- Export Section -->
+          <section class="controls-section">
+            <h2>Export</h2>
+
+            <div class="export-buttons">
+              <div class="export-row">
+                <button class="btn btn-secondary" id="export-preview-btn">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="M21 15l-5-5L5 21" />
+                  </svg>
+                  Preview
+                </button>
+                <button class="btn btn-secondary" id="export-sprites-btn">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                  </svg>
+                  Sprites
+                </button>
+              </div>
+              <button
+                class="btn btn-primary btn-full-width"
+                id="export-config-btn"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                  />
+                  <path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3" />
+                </svg>
+                Config
+              </button>
+            </div>
+          </section>
+
+          <!-- Reset Section -->
+          <section class="controls-section controls-section-reset">
+            <button class="btn btn-ghost btn-full-width" id="reset-btn">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+              Reset
+            </button>
+          </section>
+        </aside>
+
+        <!-- Preview Area -->
+        <section class="preview-section">
+          <div class="canvas-container">
+            <canvas id="preview-canvas" class="hidden"></canvas>
+            <div class="canvas-placeholder" id="canvas-placeholder">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1"
+              >
+                <rect x="2" y="2" width="20" height="20" rx="2" />
+                <path
+                  d="M7 7h.01M7 12h.01M7 17h.01M12 7h.01M12 12h.01M12 17h.01M17 7h.01M17 12h.01M17 17h.01"
+                />
+              </svg>
+              <p>Upload a reelhouse and symbols to preview</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
